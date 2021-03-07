@@ -16,16 +16,36 @@ class Document:
 
         return instance
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if self.pk is None or other.pk is None:
+            return False
+
+        return self.pk == other.pk
+
+    def __repr__(self):
+        return '{}(pk={})'.format(self.__class__.__name__, self.pk)
+
     @classmethod
     def _get_fields(cls):
-        yield [v for k, v in cls.__dict__.items() if isinstance(v, Field)]
+        for attr in dir(cls):
+            if attr.startswith('__'):
+                continue
+
+            value = getattr(cls, attr, None)
+            if not isinstance(value, Field):
+                continue
+
+            yield value
 
     @property
     def pk(self):
         return self._id
 
     def _get_collection(self):
-        return self.client['test_db'][self._get_collection_name()]
+        return client['test_db'][self._get_collection_name()]
 
     def _get_collection_name(self):
         collection_name = self._meta.get('collection_name')
