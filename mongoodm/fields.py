@@ -7,7 +7,7 @@ from.errors import ValidationError
 class Field:
 
     _class = None
-    _default = None
+    _zero_value = None
 
     def __init__(self, null=False, required=False, choices=None, \
             default=None):
@@ -40,10 +40,10 @@ class Field:
         if self.null:
             return None
 
-        if callable(self._default):
-            return self._default()
+        if callable(self._zero_value):
+            return self._zero_value()
 
-        return self._default
+        return self._zero_value
 
     def clean(self, value):
         if not isinstance(value, self._class):
@@ -72,47 +72,45 @@ class Field:
 
 class BinaryField(Field):
     _class = bytes
-    _default = bytes
+    _zero_value = bytes
 
 
 class BooleanField(Field):
     _class = bool
-    _default = bool
+    _zero_value = bool
 
 
 class DictField(Field):
     _class = dict
-    _default = dict
+    _zero_value = dict
 
 
 class FloatField(Field):
     _class = float
-    _default = float
+    _zero_value = float
 
 
 class IntField(Field):
     _class = int
-    _default = int
+    _zero_value = int
 
 
 class ListField(Field):
     _class = list
-    _default = list
+    _zero_value = list
 
 
 class StringField(Field):
     _class = str
-    _default = str
+    _zero_value = str
 
 
 class ObjectIdField(Field):
     _class = ObjectId
-    _default = ObjectId
 
 
 class DateField(Field):
     _class = datetime
-    _default = datetime.utcnow
 
     def clean(self, value):
         value = super().clean(value)
@@ -133,6 +131,5 @@ class DateField(Field):
 
 class UUIDField(Field):
     _class = uuid.UUID
-    _default = uuid.uuid4
 
     
