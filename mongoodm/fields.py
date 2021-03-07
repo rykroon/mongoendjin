@@ -1,14 +1,16 @@
 from datetime import datetime
+import uuid
 from bson import ObjectId, Decimal128
 from.errors import ValidationError
 
 
 class Field:
 
-    python_type = None
-    zero_value = None
+    _class = None
+    _default = None
 
-    def __init__(self, null=False, required=False, choices=None, default=None):
+    def __init__(self, null=False, required=False, choices=None, \
+            default=None):
         self.null = null
         self.required = required
         self.choices = choices
@@ -38,15 +40,15 @@ class Field:
         if self.null:
             return None
 
-        if callable(self.zero_value):
-            return self.zero_value()
+        if callable(self._default):
+            return self._default()
 
-        return self.zero_value
+        return self._default
 
     def clean(self, value):
-        if not isinstance(value, self.python_type):
+        if not isinstance(value, self._class):
             try:
-                value = self.python_type(value)
+                value = self._class(value)
             
             except Exception:
                 pass
@@ -64,51 +66,53 @@ class Field:
             if value not in self.choices:
                 raise ValidationError
 
-        if not isinstance(value, self.python_type):
+        if not isinstance(value, self._class):
             raise ValidationError
 
 
 class BinaryField(Field):
-    python_type = bytes
-    zero_value = bytes
+    _class = bytes
+    _default = bytes
 
 
 class BooleanField(Field):
-    python_type = bool
-    zero_value = bool
+    _class = bool
+    _default = bool
 
 
 class DictField(Field):
-    python_type = dict
-    zero_value = dict
+    _class = dict
+    _default = dict
 
 
 class FloatField(Field):
-    python_type = float
-    zero_value = float
+    _class = float
+    _default = float
 
 
 class IntField(Field):
-    python_type = int
-    zero_value = int
+    _class = int
+    _default = int
 
 
 class ListField(Field):
-    python_type = list
-    zero_value = list
+    _class = list
+    _default = list
 
 
 class StringField(Field):
-    python_type = str
-    zero_value = str
+    _class = str
+    _default = str
 
 
 class ObjectIdField(Field):
-    python_type = ObjectId
+    _class = ObjectId
+    _default = ObjectId
 
 
 class DateField(Field):
-    python_type = datetime
+    _class = datetime
+    _default = datetime.utcnow
 
     def clean(self, value):
         value = super().clean(value)
@@ -125,4 +129,10 @@ class DateField(Field):
                 pass
 
         return value
+
+
+class UUIDField(Field):
+    _class = uuid.UUID
+    _default = uuid.uuid4
+
     
