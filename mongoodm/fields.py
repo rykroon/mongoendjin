@@ -25,7 +25,7 @@ class Field:
     def __set__(self, instance, value):
         instance.__dict__[self.name] = value
         
-    def __del__(self, instance):
+    def __delete__(self, instance):
         instance.__dict__[self.name] = self.get_default()
 
     def __set_name__(self, owner, name):
