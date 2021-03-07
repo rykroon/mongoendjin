@@ -57,17 +57,21 @@ class Field:
 
     def validate(self, value):
         if not value and self.required:
-            raise ValidationError
+            msg = "Field '{}' is required.".format(self.name)
+            raise ValidationError(msg)
 
         if value is None and not self.null:
-            raise ValidationError
+            msg = "Field '{}' cannot be None.".format(self.name)
+            raise ValidationError(msg)
 
         if self.choices and value is not None:
             if value not in self.choices:
-                raise ValidationError
+                msg = "Invalid choice for field '{}'.".format(self.name)
+                raise ValidationError(msg)
 
         if not isinstance(value, self._class):
-            raise ValidationError
+            msg = "Field '{}' must be an instance of '{}'.".format(self.name, self._class)
+            raise ValidationError(msg)
 
 
 class BinaryField(Field):
