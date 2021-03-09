@@ -1,18 +1,18 @@
 from pymongo import MongoClient
 
 
-DEFAULT_CLIENT_NAME = 'default'
-DEFAULT_DB_NAME = 'test'
+DEFAULT_CONNECTION_NAME = 'default'
+DEFAULT_DATABASE_NAME = 'test'
 
 
-clients = {}
+connections = {}
 
 
-def connect(client_name=DEFAULT_CLIENT_NAME, **kwargs):
-    client = MongoClient(**kwargs)
-    clients[client_name] = client
+def connect(alias=DEFAULT_CONNECTION_NAME, **kwargs):
+    conn = MongoClient(**kwargs)
+    connections[alias] = conn
     return client
 
 
-def get_client(client_name):
-    return clients[client_name]
+def get_connection(alias):
+    return connections[alias]

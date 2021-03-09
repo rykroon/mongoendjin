@@ -1,4 +1,5 @@
-from .connections import get_client, DEFAULT_CLIENT_NAME, DEFAULT_DB_NAME
+from .connections import get_connection, DEFAULT_CONNECTION_NAME, \
+    DEFAULT_DATABASE_NAME
 from .fields import Field, ObjectIdField
 from .errors import ValidationError
 
@@ -6,8 +7,8 @@ from .errors import ValidationError
 class Document:
 
     _meta = {
-        'client_name': DEFAULT_CLIENT_NAME,
-        'db_name': DEFAULT_DB_NAME,
+        'connection_name': DEFAULT_CONNECTION_NAME,
+        'database_name': DEFAULT_DATABASE_NAME,
         'collection_name': None
     }
 
@@ -48,13 +49,13 @@ class Document:
                 cls._fields.append(value)
         return cls._fields
 
-    def _get_client(self):
-        client_name = self._meta.get('client_name')
-        return get_client(client_name)
+    def _get_connection(self):
+        alias = self._meta.get('connection_name')
+        return get_connection(alias)
 
     def _get_db(self):
-        db_name = self._meta.get('db_name')
-        return self._get_client()[db_name]
+        db_name = self._meta.get('database_name')
+        return self._get_connection()[db_name]
 
     def _get_collection(self):
         collection_name = self._get_collection_name()
@@ -85,7 +86,7 @@ class Document:
             self.clean()
         
         if validate:
-            self.validate()
+            self.validate(clean=clean)
 
         if self.pk:
             return self._update()
