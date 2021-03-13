@@ -7,24 +7,17 @@ from .fields import Field, ObjectIdField
 from .options import Options
 
 
-class DocumentMetaClass(type):
-    def __new__(cls, name, base, dct):
-        # each Document CLASS instance should have it's own _meta property
-        cls._meta = Options()
+class ModelMetaClass(type):
+    def __new__(cls, name, bases, dct):
+        # each Document CLASS should have it's own _meta property
+        new_class = super().__new__(cls, name, bases, dct)
+        new_class._meta = Options()
+        #caches the fields
+        new_class._meta.fields
+        return new_class
 
 
-
-class BaseDocument:
-
-    _meta = Options()
-
-    class Meta:
-        abstract = False
-        connection_name = DEFAULT_CONNECTION_NAME,
-        database_name = DEFAULT_DATABASE_NAME,
-        collection_name = None
-        indexes = None
-
+class BaseModel(metaclass=ModelMetaClass):
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
@@ -55,7 +48,15 @@ class BaseDocument:
         return hash(self.pk)
 
 
-class Document(BaseDocument):
+class Model(BaseModel):
+
+    class Meta:
+        abstract = False
+        connection_name = DEFAULT_CONNECTION_NAME,
+        database_name = DEFAULT_DATABASE_NAME,
+        collection_name = None
+        indexes = None
+
     _id = ObjectIdField()
 
     @property
