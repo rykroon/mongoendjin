@@ -11,7 +11,7 @@ connections = {}
 def connect(alias=DEFAULT_CONNECTION_NAME, **kwargs):
     conn = MongoClient(**kwargs)
     connections[alias] = conn
-    return client
+    return conn
 
 
 def get_connection(alias):
