@@ -1,12 +1,11 @@
-from datetime import datetime
-import uuid
+from datetime import datetime, date
 from bson import ObjectId, Decimal128
-from.errors import ValidationError
+from .errors import ValidationError
 
 
 class Field:
 
-    _class = None
+    _python_type = None
     _zero_value = None
 
     def __init__(self, null=False, required=False, choices=None, \
@@ -45,14 +44,22 @@ class Field:
 
         return self._zero_value
 
-    def clean(self, value):
-        if not isinstance(value, self._class):
-            try:
-                value = self._class(value)
-            
-            except Exception:
-                pass
+    def to_python(self, value):
+        if value is None:
+            return None
 
+        if isinstance(value, self._python_type):
+            return value
+
+        try:
+            return self._python_type(value)
+
+        except (TypeError, ValueError):
+            raise ValidationError
+
+    def clean(self, value):
+        value = self.to_python(value)
+        self.validate(value)
         return value
 
     def validate(self, value):
@@ -69,71 +76,67 @@ class Field:
                 msg = "Invalid choice for field '{}'.".format(self.name)
                 raise ValidationError(msg)
 
-        if not isinstance(value, self._class):
-            msg = "Field '{}' must be an instance of '{}'.".format(self.name, self._class)
-            raise ValidationError(msg)
-
 
 class BinaryField(Field):
-    _class = bytes
+    _python_type = bytes
     _zero_value = bytes
 
 
 class BooleanField(Field):
-    _class = bool
+    _python_type = bool
     _zero_value = bool
 
 
 class DictField(Field):
-    _class = dict
+    _python_type = dict
     _zero_value = dict
 
 
 class FloatField(Field):
-    _class = float
+    _python_type = float
     _zero_value = float
 
 
 class IntField(Field):
-    _class = int
+    _python_type = int
     _zero_value = int
 
 
 class ListField(Field):
-    _class = list
+    _python_type = list
     _zero_value = list
 
 
 class StringField(Field):
-    _class = str
+    _python_type = str
     _zero_value = str
 
 
 class ObjectIdField(Field):
-    _class = ObjectId
+    _python_type = ObjectId
 
 
 class DateField(Field):
-    _class = datetime
+    _python_type = datetime
 
-    def clean(self, value):
-        value = super().clean(value)
-        if isinstance(value, str):
-            try:
-                value = datetime.fromisoformat(value)
-            except Exception:
-                pass
-        
-        if isinstance(value, (int, float)):
-            try:
-                value = datetime.fromtimestamp(value)
-            except Exception:
-                pass
+    def to_python(self, value):
+        if isinstance(value, date):
+            return datetime(
+                year=value.date, 
+                month=value.month, 
+                day=value.day
+            )
 
-        return value
+        try:
+            if isinstance(value, str):
+                return datetime.fromisoformat(value)
+            
+            if isinstance(value, (int, float)):
+                return datetime.fromtimestamp(value)
 
+        except (TypeError, ValueError) as e:
+            raise ValidationError
 
-class UUIDField(Field):
-    _class = uuid.UUID
+        return super().to_python(value)
 
     
