@@ -1,23 +1,35 @@
+import inspect
+
 from .connections import get_connection, DEFAULT_CONNECTION_NAME, \
     DEFAULT_DATABASE_NAME
-from .fields import Field, ObjectIdField
 from .errors import ValidationError
+from .fields import Field, ObjectIdField
+from .options import Options
 
 
-class Document:
+class DocumentMetaClass(type):
+    def __new__(cls, name, base, dct):
+        # each Document CLASS instance should have it's own _meta property
+        cls._meta = Options()
 
-    _meta = {
-        'connection_name': DEFAULT_CONNECTION_NAME,
-        'database_name': DEFAULT_DATABASE_NAME,
-        'collection_name': None
-    }
 
-    _id = ObjectIdField()
+
+class BaseDocument:
+
+    _meta = Options()
+
+    class Meta:
+        abstract = False
+        connection_name = DEFAULT_CONNECTION_NAME,
+        database_name = DEFAULT_DATABASE_NAME,
+        collection_name = None
+        indexes = None
+
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
 
-        for f in cls._get_fields():
+        for f in cls._meta.fields:
             instance.__dict__[f.name] = kwargs.get(f.name, f.get_default())
 
         return instance
@@ -26,46 +38,25 @@ class Document:
         if not isinstance(other, self.__class__):
             return False
 
-        if self.pk is None or other.pk is None:
-            return False
+        if self.pk is None:
+            return self is other
 
         return self.pk == other.pk
 
     def __repr__(self):
-        return '{}(pk={})'.format(self.__class__.__name__, self.pk)
+        return '<%s: %s>' % (self.__class__.__name__, self)
 
-    @classmethod
-    def _get_fields(cls):
-        if not hasattr(cls, '_fields'):
-            cls._fields = []
-            for attr in dir(cls):
-                if attr.startswith('__'):
-                    continue
+    def __str__(self):
+        return '%s object (%s)' % (self.__class__.__name__, self.pk)
 
-                value = getattr(cls, attr, None)
-                if not isinstance(value, Field):
-                    continue
+    def __hash__(self):
+        if self.pk is None:
+            raise TypeError("Model instances without primary key value are unhashable")
+        return hash(self.pk)
 
-                cls._fields.append(value)
-        return cls._fields
 
-    def _get_connection(self):
-        alias = self._meta.get('connection_name')
-        return get_connection(alias)
-
-    def _get_db(self):
-        db_name = self._meta.get('database_name')
-        return self._get_connection()[db_name]
-
-    def _get_collection(self):
-        collection_name = self._get_collection_name()
-        return self._get_db()[collection_name]
-
-    def _get_collection_name(self):
-        collection_name = self._meta.get('collection_name')
-        if collection_name is None:
-            collection_name = self.__class__.__name__.lower()
-        return collection_name
+class Document(BaseDocument):
+    _id = ObjectIdField()
 
     @property
     def pk(self):
