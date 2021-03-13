@@ -1,4 +1,4 @@
 from .connections import connect
-from .documents import Document
+from .models import Model
 from .fields import BinaryField, BooleanField, IntField, FloatField, \
     StringField, ObjectIdField, DateField

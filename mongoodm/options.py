@@ -8,17 +8,18 @@ class Options:
         self.owner = None
 
     def __get__(self, instance, owner=None):
-        self.owner = owner
+        if self.owner is None:
+            self.owner = owner
         return self
 
-    #@CachedProperty
-    @property
+    @CachedProperty
     def fields(self):
         return self.get_fields()
 
     def get_fields(self):
         fields = {}
-        for class_ in self.parents:
+        classes = inspect.getmro(self.owner)
+        for class_ in classes:
             for attr, value in vars(class_).items():
                 if isinstance(value, Field):
                     if attr in fields:
@@ -27,26 +28,17 @@ class Options:
 
         return list(fields.values())
 
-    #@CachedProperty
-    @property
+    @CachedProperty
     def meta(self):
         return self.get_meta()
 
     def get_meta(self):
         meta = getattr(self.owner, 'Meta', None)
-        meta_dict = meta.__dict__
+        meta_dict = meta.__dict__.copy()
         for name in meta.__dict__:
             if name.startswith('_'):
                 del meta_dict[name]
         return meta_dict
-
-    #@CachedProperty
-    @property
-    def parents(self):
-        return self.get_parents()
-
-    def get_parents(self):
-        return inspect.getmro(self.owner)
 
     def get_connection_name(self):
         return self.meta.get('connection_name', DEFAULT_CONNECTION_NAME)
