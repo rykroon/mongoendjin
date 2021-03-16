@@ -1,4 +1,5 @@
 import inspect
+from .errors import FieldDoesNotExist
 from .fields import Field
 from .utils import CachedProperty
 
@@ -12,11 +13,18 @@ class Options:
             self.owner = owner
         return self
 
+    def get_field(self, field_name):
+        try:
+            return self.fields_map[field_name]
+        except KeyError:
+            raise FieldDoesNotExist
+
     @CachedProperty
     def fields(self):
-        return self.get_fields()
+        return list(self.fields_map.values())
 
-    def get_fields(self):
+    @CachedProperty
+    def fields_map(self):
         fields = {}
         classes = inspect.getmro(self.owner)
         for class_ in classes:
@@ -26,7 +34,7 @@ class Options:
                         continue
                     fields[attr] = value
 
-        return list(fields.values())
+        return fields
 
     @CachedProperty
     def meta(self):
