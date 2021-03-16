@@ -8,12 +8,13 @@ class Field:
     _python_type = None
     _zero_value = None
 
-    def __init__(self, null=False, required=False, choices=None, \
-            default=None):
-        self.null = null
-        self.required = required
+    def __init__(self, choices=None, default=None, null=False, required=False, unique=False):
         self.choices = choices
         self.default = default
+        self.null = null
+        self.required = required
+        self.unique=False
+
 
     def __get__(self, instance, owner=None):
         if instance is None:
@@ -45,10 +46,7 @@ class Field:
         return self._zero_value
 
     def to_python(self, value):
-        if value is None:
-            return None
-
-        if isinstance(value, self._python_type):
+        if isinstance(value, self._python_type) or value is None:
             return value
 
         try:
@@ -85,6 +83,15 @@ class BinaryField(Field):
 class BooleanField(Field):
     _python_type = bool
     _zero_value = bool
+
+    def to_python(self, value):
+        if value in ('t', 'true', '1', 1):
+            return True
+
+        if value in ('f', 'false', '0', 0):
+            return False
+
+        return super().to_python(value)
 
 
 class DictField(Field):
@@ -135,7 +142,7 @@ class DateField(Field):
                 return datetime.fromtimestamp(value)
 
         except (TypeError, ValueError) as e:
-            raise ValidationError
+            pass
 
         return super().to_python(value)
 
