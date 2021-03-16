@@ -65,7 +65,7 @@ class Model(BaseModel):
 
     def to_dict(self, inc=None, exc=None):
         d = {}
-        for f in self._get_fields():
+        for f in self._meta.fields:
             if inc and f.name not in inc:
                 continue
             if exc and f.name in exc:
@@ -105,20 +105,32 @@ class Model(BaseModel):
     def clean(self):
         pass
 
-    def validate(self, clean=True):
+    def clean_fields(self):
         errors = {}
-        if clean:
-            self.clean()
 
-        for f in self._get_fields():
+        for f in self._meta.fields:
             value = getattr(self, f.name)
-            if clean:
-                setattr(self, f.name, f.clean(value))
-
             try:
-                f.validate(value)
+                setattr(self, f.name, f.clean(value))
             except ValidationError as e:
                 errors[f.name] = str(e)
 
         if errors:
             raise ValidationError(errors)
+
+    def full_clean(self):
+        errors = {}
+
+        try:
+            self.clean_fields()
+        except ValidationError as e:
+            pass
+
+        try:
+            self.clean()
+        except ValidationError as e:
+            pass
+
+        if errors:
+            raise ValidationError(errors)
+
