@@ -62,16 +62,16 @@ class Field:
 
     def validate(self, value):
         if not value and self.required:
-            msg = "Field '{}' is required.".format(self.name)
+            msg = "This field is required."
             raise ValidationError(msg)
 
         if value is None and not self.null:
-            msg = "Field '{}' cannot be None.".format(self.name)
+            msg = "This field cannot be null."
             raise ValidationError(msg)
 
         if self.choices and value is not None:
             if value not in self.choices:
-                msg = "Invalid choice for field '{}'.".format(self.name)
+                msg = "Value '{}' is not a valid choice.".format(value)
                 raise ValidationError(msg)
 
 
