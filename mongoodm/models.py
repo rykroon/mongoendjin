@@ -11,7 +11,8 @@ class ModelMetaClass(type):
     def __new__(cls, name, bases, dct):
         # each Document CLASS should have it's own _meta property
         new_class = super().__new__(cls, name, bases, dct)
-        new_class._meta = Options()
+        options = Options()
+        options.contribute_to_class(new_class)
         #caches the fields
         new_class._meta.fields
         return new_class
@@ -52,8 +53,8 @@ class Model(BaseModel):
 
     class Meta:
         abstract = False
-        connection_name = DEFAULT_CONNECTION_NAME,
-        database_name = DEFAULT_DATABASE_NAME,
+        connection_name = DEFAULT_CONNECTION_NAME
+        database_name = DEFAULT_DATABASE_NAME
         collection_name = None
         indexes = None
 

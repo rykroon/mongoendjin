@@ -1,17 +1,40 @@
-import inspect
 from .errors import FieldDoesNotExist
 from .fields import Field
 from .utils import CachedProperty
 
+
+DEFAULT_NAMES = (
+    'abstract',
+    'collection_name',
+    'connection_name',
+    'database_name',
+    'indexes'
+)
+
+
 class Options:
 
     def __init__(self):
-        self.owner = None
+        self.model = None
 
-    def __get__(self, instance, owner=None):
-        if self.owner is None:
-            self.owner = owner
-        return self
+    def contribute_to_class(self, cls):
+        cls._meta = self
+        self.model = cls
+
+        meta_class = getattr(self.model, 'Meta', None)
+
+        if meta_class:
+            meta_attrs = meta_class.__dict__.copy()
+            for name in meta_class.__dict__:
+                if name.startswith('_'):
+                    del meta_attrs[name]
+
+                for attr_name in DEFAULT_NAMES:
+                    if attr_name in meta_attrs:
+                        setattr(self, attr_name, meta_attrs.pop(attr_name))
+
+            if meta_attrs:
+                raise TypeError("'class Meta' got invalid attribute(s): %s" % ','.join(meta_attrs))
 
     def get_field(self, field_name):
         try:
@@ -26,27 +49,13 @@ class Options:
     @CachedProperty
     def fields_map(self):
         fields = {}
-        classes = inspect.getmro(self.owner)
-        for class_ in classes:
+        for class_ in self.model.mro():
             for attr, value in vars(class_).items():
                 if isinstance(value, Field):
                     if attr in fields:
                         continue
                     fields[attr] = value
-
         return fields
-
-    @CachedProperty
-    def meta(self):
-        return self.get_meta()
-
-    def get_meta(self):
-        meta = getattr(self.owner, 'Meta', None)
-        meta_dict = meta.__dict__.copy()
-        for name in meta.__dict__:
-            if name.startswith('_'):
-                del meta_dict[name]
-        return meta_dict
 
     def get_connection_name(self):
         return self.meta.get('connection_name', DEFAULT_CONNECTION_NAME)
@@ -55,4 +64,4 @@ class Options:
         return self.meta.get('database_name', DEFAULT_DATABASE_NAME)
 
     def get_collection_name(self):
-        return self.meta.get('collection_name', self.owner.__name__.lower())
+        return self.meta.get('collection_name', self.model.__name__.lower())
