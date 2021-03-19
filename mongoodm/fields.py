@@ -37,6 +37,9 @@ class Field:
         self.model = cls
         cls._meta.add_field(self)
 
+        if not hasattr(cls, self.name):
+            setattr(cls, self.name, self)
+
     def get_default(self):
         if self.default is not Undefined:
             if callable(self.default):
