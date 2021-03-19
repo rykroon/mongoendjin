@@ -4,7 +4,11 @@ from .errors import ValidationError
 
 
 EMPTY_VALUES = (None, '', [], (), {})
-Undefined = object()
+
+
+class Undefined:
+    pass
+
 
 class Field:
     _zero_value = None
