@@ -1,3 +1,4 @@
+import copy
 from .errors import FieldDoesNotExist
 from .fields import Field
 from .utils import CachedProperty
@@ -17,6 +18,7 @@ class Options:
     def __init__(self, meta):
         self.meta = meta
         self.local_fields = []
+        self.local_managers = []
 
     def contribute_to_class(self, cls, name):
         cls._meta = self
@@ -38,6 +40,9 @@ class Options:
     def add_field(self, field):
         self.local_fields.append(field)
 
+    def add_manager(self, manager):
+        self.local_managers.append(manager)
+
     def get_field(self, field_name):
         try:
             return self.fields_map[field_name]
@@ -49,15 +54,45 @@ class Options:
         return list(self.fields_map.values())
 
     @CachedProperty
-    def fields_map(self):
-        fields = {}
-        for class_ in self.model.mro():
-            for attr, value in vars(class_).items():
-                if isinstance(value, Field):
-                    if attr in fields:
-                        continue
-                    fields[attr] = value
+    def fields(self):
+        fields = []
+        seen_fields = set()
+        bases = (b for b in self.model.mro() if hasattr(b, '_meta'))
+        for base in bases:
+            for field in base._meta.local_fields:
+                if field.name in seen_fields:
+                    continue
+                field = copy.copy(field)
+                field.model = self.model
+                seen_fields.add(field.name)
+                fields.append(field)
+
         return fields
+
+    @CachedProperty
+    def fields_map(self):
+        return {field.name: field for field in self.fields}
+
+    @CachedProperty
+    def managers(self):
+        managers = []
+        seen_managers = set()
+        bases = (b for b in self.model.mro() if hasattr(b, '_meta'))
+        for base in bases:
+            for manager in base._meta.local_managers:
+                if manager.name in seen_managers:
+                    continue
+
+                manager = copy.copy(manager)
+                manager.model = self.model
+                seen_managers.add(manager.name)
+                managers.append(manager)
+
+        return managers
+
+    @CachedProperty
+    def managers_map(self):
+        return {manager.name: manager for manager in self.managers}
 
     def get_connection_name(self):
         return self.meta.get('connection_name', DEFAULT_CONNECTION_NAME)
