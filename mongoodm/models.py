@@ -1,3 +1,4 @@
+import copy
 import inspect
 
 from .connections import get_connection, DEFAULT_CONNECTION_NAME, \
@@ -7,18 +8,51 @@ from .fields import Field, ObjectIdField
 from .options import Options
 
 
-class ModelMetaClass(type):
-    def __new__(cls, name, bases, dct):
-        # each Document CLASS should have it's own _meta property
-        new_class = super().__new__(cls, name, bases, dct)
-        options = Options()
-        options.contribute_to_class(new_class)
-        #caches the fields
-        new_class._meta.fields
+class ModelBase(type):
+    def __new__(cls, name, bases, attrs, **kwargs):
+        super_new = super().__new__
+
+        parents = [b for b in bases if isinstance(b, ModelBase)]
+        if not parents:
+            return super_new(cls, name, bases, attrs)
+
+        new_attrs = {}
+        attr_meta = attrs.pop('Meta', None)
+        contributable_attrs = {}
+
+        for obj_name, obj in attrs.items():
+            if hasattr(obj, 'contribute_to_class'):
+                contributable_attrs[obj_name] = obj
+            else:
+                new_attrs[obj_name] = obj
+        
+        new_class = super_new(cls, name, bases, new_attrs, **kwargs)
+        meta = attr_meta or getattr(new_class, 'Meta', None)
+        new_class.add_to_class('_meta', Options(meta))
+
+        for obj_name, obj in contributable_attrs.items():
+            new_class.add_to_class(obj_name, obj)
+
+        for base in new_class.mro():
+            if base not in parents or not hasattr(base, '_meta'):
+                continue
+
+            parent_fields = base._meta.local_fields
+            for field in parent_fields:
+                new_field = copy.deepcopy(field)
+                new_class.add_to_class(field.name, new_field)
+
+
         return new_class
 
+    def add_to_class(cls, name, value):
+        if hasattr(value, 'contribute_to_class'):
+            value.contribute_to_class(cls, name)
+        else:
+            setattr(cls, name, value)
 
-class BaseModel(metaclass=ModelMetaClass):
+
+class BaseModel(metaclass=ModelBase):
 
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)

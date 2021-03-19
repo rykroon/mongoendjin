@@ -14,18 +14,17 @@ DEFAULT_NAMES = (
 
 class Options:
 
-    def __init__(self):
-        self.model = None
+    def __init__(self, meta):
+        self.meta = meta
+        self.local_fields = []
 
-    def contribute_to_class(self, cls):
+    def contribute_to_class(self, cls, name):
         cls._meta = self
         self.model = cls
 
-        meta_class = getattr(self.model, 'Meta', None)
-
-        if meta_class:
-            meta_attrs = meta_class.__dict__.copy()
-            for name in meta_class.__dict__:
+        if self.meta:
+            meta_attrs = self.meta.__dict__.copy()
+            for name in self.meta.__dict__:
                 if name.startswith('_'):
                     del meta_attrs[name]
 
@@ -35,6 +34,9 @@ class Options:
 
             if meta_attrs:
                 raise TypeError("'class Meta' got invalid attribute(s): %s" % ','.join(meta_attrs))
+
+    def add_field(self, field):
+        self.local_fields.append(field)
 
     def get_field(self, field_name):
         try:
