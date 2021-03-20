@@ -7,22 +7,39 @@ from .utils import CachedProperty
 DEFAULT_NAMES = (
     'abstract',
     'collection_name',
-    'connection_name',
-    'database_name',
-    'indexes'
+    #'database_name',
+    'indexes',
+    'verbose_name',
+    'verbose_name_plural',
 )
+
+
+def camel_case_to_spaces(s):
+    return s[0].lower() + ''.join([' %s' % c.lower() if c.isupper() else c for c in s[1:]])
 
 
 class Options:
 
     def __init__(self, meta):
         self.meta = meta
+        self.abstract = False
+        self.collection_name = ''
+        self.indexes = []
         self.local_fields = []
         self.local_managers = []
+        self.model_name = None
+        self.object_name = None
+        self.pk = None
+        self.verbose_name = None
+        self.verbose_name_plural = None
 
     def contribute_to_class(self, cls, name):
         cls._meta = self
         self.model = cls
+
+        self.object_name = cls.__name__
+        self.model_name = self.object_name.lower()
+        self.verbose_name = camel_case_to_spaces(self.object_name)
 
         if self.meta:
             meta_attrs = self.meta.__dict__.copy()
@@ -30,12 +47,20 @@ class Options:
                 if name.startswith('_'):
                     del meta_attrs[name]
 
-                for attr_name in DEFAULT_NAMES:
-                    if attr_name in meta_attrs:
-                        setattr(self, attr_name, meta_attrs.pop(attr_name))
+            for attr_name in DEFAULT_NAMES:
+                if attr_name in meta_attrs:
+                    setattr(self, attr_name, meta_attrs.pop(attr_name))
 
-            if meta_attrs:
+            if meta_attrs != {}:
                 raise TypeError("'class Meta' got invalid attribute(s): %s" % ','.join(meta_attrs))
+
+        if self.verbose_name_plural is None:
+            self.verbose_name_plural = '{}s'.format(self.verbose_name)
+
+        del self.meta
+
+        if not self.collection_name:
+            self.collection_name = self.model_name
 
     def add_field(self, field):
         self.local_fields.append(field)
@@ -93,12 +118,3 @@ class Options:
     @CachedProperty
     def managers_map(self):
         return {manager.name: manager for manager in self.managers}
-
-    def get_connection_name(self):
-        return self.meta.get('connection_name', DEFAULT_CONNECTION_NAME)
-
-    def get_database_name(self):
-        return self.meta.get('database_name', DEFAULT_DATABASE_NAME)
-
-    def get_collection_name(self):
-        return self.meta.get('collection_name', self.model.__name__.lower())
