@@ -8,6 +8,11 @@ from .fields import Field, ObjectIdField
 from .options import Options
 
 
+def _has_contribute_to_class(value):
+    # Only call contribute_to_class() if it's bound.
+    return not inspect.isclass(value) and hasattr(value, 'contribute_to_class')
+
+
 class ModelBase(type):
     def __new__(cls, name, bases, attrs, **kwargs):
         super_new = super().__new__
@@ -21,17 +26,20 @@ class ModelBase(type):
         contributable_attrs = {}
 
         for obj_name, obj in attrs.items():
-            if hasattr(obj, 'contribute_to_class'):
+            if _has_contribute_to_class(obj):
                 contributable_attrs[obj_name] = obj
             else:
                 new_attrs[obj_name] = obj
         
         new_class = super_new(cls, name, bases, new_attrs, **kwargs)
+        #abstract = getattr(attr_meta, 'abstract', False)
         meta = attr_meta or getattr(new_class, 'Meta', None)
         new_class.add_to_class('_meta', Options(meta))
 
         for obj_name, obj in contributable_attrs.items():
             new_class.add_to_class(obj_name, obj)
+
+        #field_names = {f.name for f in new_fields}
 
         for base in new_class.mro():
             if base not in parents or not hasattr(base, '_meta'):
@@ -42,57 +50,57 @@ class ModelBase(type):
                 new_field = copy.deepcopy(field)
                 new_class.add_to_class(field.name, new_field)
 
-
         return new_class
 
     def add_to_class(cls, name, value):
-        if hasattr(value, 'contribute_to_class'):
+        if _has_contribute_to_class(value):
             value.contribute_to_class(cls, name)
         else:
             setattr(cls, name, value)
 
 
-class BaseModel(metaclass=ModelBase):
+class Model(metaclass=ModelBase):
 
-    def __new__(cls, *args, **kwargs):
-        instance = super().__new__(cls)
+    _id = ObjectIdField()
 
-        for f in cls._meta.fields:
-            instance.__dict__[f.name] = kwargs.get(f.name, f.get_default())
+    def __init__(self, **kwargs):
+        cls = self.__class__
+        opts = cls._meta
+        if opts.abstract:
+            raise TypeError('Abstract models cannot be instantiated.')
 
-        return instance
+        for field in opts.fields:
+            try:
+                val = kwargs.pop(field.name)
+            except KeyError:
+                val = field.get_default()
 
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
+            setattr(self, field.name, val)
 
-        if self.pk is None:
-            return self is other
+        for kwarg in kwargs:
+            raise TypeError("%s() got an unexpected keyword argument '%s'" % (cls.__name__, kwarg))
 
-        return self.pk == other.pk
+        super().__init__()
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self)
 
     def __str__(self):
         return '%s object (%s)' % (self.__class__.__name__, self.pk)
+    
+    def __eq__(self, other):
+        if not isinstance(other, Model):
+            return NotImplemented
+
+        if self.pk is None:
+            return self is other
+
+        return self.pk == other.pk
 
     def __hash__(self):
         if self.pk is None:
             raise TypeError("Model instances without primary key value are unhashable")
         return hash(self.pk)
-
-
-class Model(BaseModel):
-
-    class Meta:
-        abstract = False
-        connection_name = DEFAULT_CONNECTION_NAME
-        database_name = DEFAULT_DATABASE_NAME
-        collection_name = None
-        indexes = None
-
-    _id = ObjectIdField()
 
     @property
     def pk(self):
@@ -108,7 +116,7 @@ class Model(BaseModel):
             d[f.name] = getattr(self, f.name)
         return d
 
-    def save(self, validate=True, clean=True):
+    def save(self):
         if clean:
             self.clean()
         
