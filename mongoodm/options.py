@@ -1,6 +1,5 @@
 import copy
 from .errors import FieldDoesNotExist
-from .fields import Field
 from .utils import CachedProperty
 
 
