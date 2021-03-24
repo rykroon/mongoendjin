@@ -1,10 +1,8 @@
 import copy
 import inspect
 
-from .connections import get_connection, DEFAULT_CONNECTION_NAME, \
-    DEFAULT_DATABASE_NAME
 from .errors import ValidationError
-from .fields import Field, ObjectIdField
+from .fields import ObjectIdField
 from .options import Options
 
 
