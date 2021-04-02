@@ -103,5 +103,27 @@ class Q(dict):
         return obj
 
 
+class RegisterLookupMixin:
+
+    def get_lookup(self, lookup_name):
+        return self.__class__.get_lookups().get(lookup_name, None)
+
+    @classmethod
+    def get_lookups(cls):
+        class_lookups = [parent.__dict__.get('class_lookups', {}) for parent in cls.mro()]
+        merged = {}
+        for d in reversed(class_lookups):
+            merged.update(d)
+        return merged
+
+    @classmethod
+    def register_lookup(cls, lookup, lookup_name=None):
+        if lookup_name is None:
+            lookup_name = lookup.lookup_name
+        if 'class_lookups' not in cls.__dict__:
+            cls.class_lookups = {}
+        cls.class_lookups[lookup_name] = lookup
+        return lookup
+        
 
         
