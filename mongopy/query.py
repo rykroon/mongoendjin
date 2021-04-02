@@ -1,5 +1,5 @@
 
-from query_utils import Q, LOOKUP_SEP
+from mongopy.query_utils import Q, LOOKUP_SEP
 
 
 class QuerySet():
@@ -35,11 +35,6 @@ class QuerySet():
 
             else:
                 raise ValueError
-
-
-
-
-
 
 
     def _chain(self):
