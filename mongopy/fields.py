@@ -1,19 +1,20 @@
 from datetime import datetime, date
 from bson import ObjectId, Decimal128
 from .errors import ValidationError
+from .query_utils import RegisterLookupMixin
 
 
 EMPTY_VALUES = (None, '', [], (), {})
 
 
-class Undefined:
+class NOT_PROVIDED:
     pass
 
 
-class Field:
+class Field(RegisterLookupMixin):
     _zero_value = None
 
-    def __init__(self, blank=False, choices=None, default=Undefined, null=False, unique=False):
+    def __init__(self, blank=False, choices=None, default=NOT_PROVIDED, null=False, unique=False):
         self.blank = blank
         self.choices = choices
         self.default = default
