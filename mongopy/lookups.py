@@ -56,6 +56,9 @@ class In(Lookup):
     lookup_name = 'in'
     mongo_op = '$in'
 
+    # will need to add logic to verify that the rhs
+    # is an iterable
+
 
 class PatternLookup(Lookup):
     mongo_op = '$regex'
@@ -102,6 +105,17 @@ class EndsWith(PatternLookup):
 class IEndsWith(EndsWith):
     lookup_name = 'iendswith'
     options = 'i'
+
+
+@Field.register_lookup
+class Range(Lookup):
+    lookup_name = 'range'
+    
+    def process_rhs(self):
+        return {
+            '$gt': self.rhs[0], 
+            '$lt': self.rhs[1]
+        }
 
 
 @Field.register_lookup
