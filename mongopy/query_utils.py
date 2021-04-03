@@ -1,12 +1,5 @@
 from mongopy.utils import tree
 
-LOOKUP_SEP = '__'
-
-AND = '$and'
-NOT = '$not'
-OR = '$or'
-NOR = '$nor'
-
 
 class Q(tree.Node):
 
