@@ -1,105 +1,53 @@
-
+from mongopy.utils import tree
 
 LOOKUP_SEP = '__'
-
-EQ = '$eq'
-GT = '$gt'
-GTE = '$gte'
-IN = '$in'
-LT = '$lt'
-LTE = '$lte'
-NE = '$ne'
-NIN = '$nin'
 
 AND = '$and'
 NOT = '$not'
 OR = '$or'
 NOR = '$nor'
 
-EXISTS = '$exists'
-TYPE = '$type'
 
+class Q(tree.Node):
 
-COMPARISON_OPERATORS = [
-    'eq',
-    'gt',
-    'gte',
-    'in',
-    'lt',
-    'lte',
-    'ne',
-    'nin'
-]
+    # Connection types
+    AND = 'AND'
+    OR = 'OR'
+    default = AND
+    conditional = True
 
-
-LOGICAL_OPERATORS = [
-    'and',
-    'not',
-    'nor',
-    'or'
-]
-
-ELEMENT_OPERATORS = [
-    'exists',
-    'type'
-]
-
-
-"""
-    Notes
-    - using the models' _meta.get_field() method, verify that the first named part is 
-        a valid field. Then make sure that lookup is valid.
-"""
-
-
-class Q(dict):
-
-    AND = '$and'
-    OR = '$or'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for k, v in self.copy().items():
-            if k.startswith('$'):
-                continue
-
-            try:
-                key, op = k.split('__', 1)
-                if op not in COMPARISON_OPERATORS:
-                    raise ValueError
-                op = '${}'.format(op)
-
-            except ValueError:
-                key, op = k, '$eq'
-
-            del self[k]
-            self[key] = Q({op: v})
+    def __init__(self, *args, _connector=None, _negated=False, **kwargs):
+        super().__init__(children=[*args, *sorted(kwargs.items())], connector=_connector, negated=_negated)
         
-    def _combine(self, other, cond):
-        if not isinstance(other, Q):
+    def _combine(self, other, conn):
+        if not(isinstance(other, Q) or getattr(other, 'conditional', False) is True):
             raise TypeError(other)
 
-        obj = Q({
-            cond: [self, other]
-        })
+        # If the other Q() is empty, ignore it and just use `self`.
+        if not other:
+            _, args, kwargs = self.deconstruct()
+            return type(self)(*args, **kwargs)
+        # Or if this Q is empty, ignore it and just use `other`.
+        elif not self:
+            _, args, kwargs = other.deconstruct()
+            return type(other)(*args, **kwargs)
 
+        obj = type(self)()
+        obj.connector = conn
+        obj.add(self, conn)
+        obj.add(other, conn)
         return obj
-
-    def __and__(self, other):
-        return self._combine(other, self.AND)
 
     def __or__(self, other):
         return self._combine(other, self.OR)
 
+    def __and__(self, other):
+        return self._combine(other, self.AND)
+
     def __invert__(self):
-        obj = Q()
-        for field, expr in self.items():
-            #this will definitely need some work
-            if isinstance(expr, Q):
-                obj[field] = {'$not': expr}
-            else:
-                obj[field] = {'$ne': expr}
+        obj = type(self)()
+        obj.add(self, self.AND)
+        obj.negate()
         return obj
 
 
