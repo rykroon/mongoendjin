@@ -1,6 +1,6 @@
 import copy
 from .errors import FieldDoesNotExist
-from .utils import CachedProperty
+from mongopy.utils.functional import cached_property
 
 
 DEFAULT_NAMES = (
@@ -73,11 +73,11 @@ class Options:
         except KeyError:
             raise FieldDoesNotExist
 
-    @CachedProperty
+    @cached_property
     def fields(self):
         return list(self.fields_map.values())
 
-    @CachedProperty
+    @cached_property
     def fields(self):
         fields = []
         seen_fields = set()
@@ -93,7 +93,7 @@ class Options:
 
         return fields
 
-    @CachedProperty
+    @cached_property
     def fields_map(self):
         return {field.name: field for field in self.fields}
 
@@ -114,6 +114,6 @@ class Options:
 
         return managers
 
-    @CachedProperty
+    @cached_property
     def managers_map(self):
         return {manager.name: manager for manager in self.managers}
