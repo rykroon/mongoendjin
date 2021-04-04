@@ -83,7 +83,7 @@ class Model(metaclass=ModelBase):
     @classmethod
     def from_db(cls, db, field_names, values):
         #more logic goes here
-        new = cls(*values):
+        new = cls(*values)
         return new
 
     def __repr__(self):
