@@ -4,7 +4,8 @@ from mongopy.query_utils import Q
 
 
 class BaseIterable:
-    pass
+    def __init__(self, queryset):
+        self.queryset = queryset
 
 
 class ModelIterable(BaseIterable):
@@ -24,6 +25,10 @@ class QuerySet():
         self._query = query or mongo.Query(self.model)
         self._result_cache = None
         self._iterable_class = ModelIterable
+
+    @property
+    def query(self):
+        return self._query
 
     ########################
     # PYTHON MAGIC METHODS #
@@ -58,7 +63,10 @@ class QuerySet():
     ####################################
 
     def count(self):
-        pass
+        if self._result_cache is not None:
+            return len(self._result_cache)
+
+        return self.query.get_count()
 
     def get(self, *args, **kwargs):
         clone = self.filter(*args, **kwargs)
@@ -132,7 +140,7 @@ class QuerySet():
         return obj
 
     def _clone(self):
-        c = self.__class__(model=self.model, query=self._query.chain(), using=self._db)
+        c = self.__class__(model=self.model, query=self.query.chain(), using=self._db)
         c._iterable_class = self._iterable_class
         c._fields = self._fields
         return c

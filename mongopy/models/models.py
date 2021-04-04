@@ -80,6 +80,12 @@ class Model(metaclass=ModelBase):
 
         super().__init__()
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        #more logic goes here
+        new = cls(*values):
+        return new
+
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self)
 
