@@ -18,11 +18,11 @@ class Q(tree.Node):
 
         # If the other Q() is empty, ignore it and just use `self`.
         if not other:
-            _, args, kwargs = self.deconstruct()
+            args, kwargs = self.deconstruct()
             return type(self)(*args, **kwargs)
         # Or if this Q is empty, ignore it and just use `other`.
         elif not self:
-            _, args, kwargs = other.deconstruct()
+            args, kwargs = other.deconstruct()
             return type(other)(*args, **kwargs)
 
         obj = type(self)()
@@ -42,6 +42,15 @@ class Q(tree.Node):
         obj.add(self, self.AND)
         obj.negate()
         return obj
+
+    def deconstruct(self):
+        args = tuple(self.children)
+        kwargs = {}
+        if self.connector != self.default:
+            kwargs['_connector'] = self.connector
+        if self.negated:
+            kwargs['_negated'] = True
+        return args, kwargs
 
 
 class RegisterLookupMixin:
