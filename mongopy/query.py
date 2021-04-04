@@ -1,46 +1,39 @@
 
-from mongopy.query_utils import Q, LOOKUP_SEP
+from mongopy.constants import LOOKUP_SEP
+from mongopy.query_utils import Q
 
 
 class QuerySet():
     
-    def __init__(self, model=None, cursor=None, using=None):
+    def __init__(self, model=None, query=None, using=None):
         self.model = model
         self._db = using
-        self.cursor = cursor
+        self._query = query or mongo.Query(self.model)
 
     def all(self):
         return self._chain()
 
     def filter(self, *args, **kwargs):
-        pass
+        return self._filter_or_exclude(False, args, kwargs)
 
     def exclude(self, *args, **kwargs):
-        pass
+        return self._filter_or_exclude(True, args, kwargs)
 
     def _filter_or_exclude(self, negate, args, kwargs):
-        for arg in args:
-            if not isinstance(arg, Q):
-                raise TypeError
+        clone = self._chain()
+        clone._filter_or_exclude_inplace(negate, args, kwargs)
+        return clone
 
-        for k, v in kwargs.items():
-            lookup = k.split(LOOKUP_SEP)
-            field_name = lookup[0]
-            field = self.model._meta.get_field(field_name)
-            if len(lookup) == 1:  
-                operator = '$eq'
-
-            elif len(lookup) == 2:
-                operator = '${}'.format(lookup[1])
-
-            else:
-                raise ValueError
-
+    def _filter_or_exclude_inplace(self, negate, args, kwargs):
+        if negate:
+            self._query.add_q(~Q(*args, **kwargs))
+        else:
+            self._query.add_q(Q(*args, **kwargs))
 
     def _chain(self):
         obj = self._clone()
         return obj
 
     def _clone(self):
-        c = self.__class__(model=self.model, cursor=self.cursor.clone(), using=self._db)
+        c = self.__class__(model=self.model, query=self._query.chain(), using=self._db)
         return c
