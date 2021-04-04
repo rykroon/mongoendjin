@@ -4,3 +4,4 @@ from mongopy.fields import BinaryField, BooleanField, DateField, \
     DictField, FloatField, IntField, ListField, ObjectIdField, StringField
 from mongopy.lookups import Lookup
 from mongopy.query import QuerySet
+from mongopy.query_utils import Q
