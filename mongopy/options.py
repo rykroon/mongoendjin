@@ -1,6 +1,7 @@
 import copy
 from .errors import FieldDoesNotExist
 from mongopy.utils.functional import cached_property
+from mongopy.utils.text import camel_case_to_spaces
 
 
 DEFAULT_NAMES = (
@@ -11,10 +12,6 @@ DEFAULT_NAMES = (
     'verbose_name',
     'verbose_name_plural',
 )
-
-
-def camel_case_to_spaces(s):
-    return s[0].lower() + ''.join([' %s' % c.lower() if c.isupper() else c for c in s[1:]])
 
 
 class Options:
@@ -97,7 +94,7 @@ class Options:
     def fields_map(self):
         return {field.name: field for field in self.fields}
 
-    @CachedProperty
+    @cached_property
     def managers(self):
         managers = []
         seen_managers = set()
