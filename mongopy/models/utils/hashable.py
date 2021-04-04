@@ -1,4 +1,4 @@
-from mongopy.utils.itercompat import is_iterable
+from mongopy.models.utils.itercompat import is_iterable
 
 
 def make_hashable(value):

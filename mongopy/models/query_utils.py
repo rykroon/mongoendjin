@@ -1,4 +1,4 @@
-from mongopy.utils import tree
+from mongopy.models.utils import tree
 
 
 class Q(tree.Node):

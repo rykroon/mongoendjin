@@ -1,7 +1,7 @@
 import copy
 from .errors import FieldDoesNotExist
-from mongopy.utils.functional import cached_property
-from mongopy.utils.text import camel_case_to_spaces
+from mongopy.models.utils.functional import cached_property
+from mongopy.models.utils.text import camel_case_to_spaces
 
 
 DEFAULT_NAMES = (

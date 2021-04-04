@@ -1,4 +1,4 @@
-from mongopy.nosql.datastructures import Empty
+from mongopy.models.nosql.datastructures import Empty
 
 
 """
