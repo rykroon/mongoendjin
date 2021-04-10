@@ -1,3 +1,4 @@
+from mongopy import connections
 from mongopy.models.nosql.datastructures import Empty
 
 
@@ -8,8 +9,23 @@ from mongopy.models.nosql.datastructures import Empty
 """
 
 
-
 class Query:
+
+    def __init__(self, model):
+        self.model = model
+
+    def get_db(self, using):
+        return connections[using]
+
+    def get_collection(self, using):
+        db = self.get_db(using)
+        return db[self.get_meta().collection_name]
+
+
+    ###
+
+    def get_meta(self):
+        return self.model._meta
 
     def clone(self):
         obj = Empty()
@@ -23,9 +39,9 @@ class Query:
             obj.__class__ = klass
         return obj
 
-    def get_count(self):
+    def get_count(self, using):
         obj = self.clone()
-
+        return obj.get_collection(using).count_documents(self.filter)
 
     def add_q(self, q_object):
         pass
