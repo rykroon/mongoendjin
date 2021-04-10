@@ -1,4 +1,3 @@
-from .connections import connect
 from mongopy.models.base import Model
 from mongopy.models.fields import BinaryField, BooleanField, DateField, \
     DictField, FloatField, IntField, ListField, ObjectIdField, StringField

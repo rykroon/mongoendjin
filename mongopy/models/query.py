@@ -50,12 +50,30 @@ class QuerySet():
         if not isinstance(k, (int, slice)):
             raise TypeError
 
-        #check negative indexing
+        if isinstance(k, slice):
+            if k.start is not None:
+                assert k.start >= 0, "Negative indexing is not supported."
+
+            if k.stop is not None:
+                assert k.stop >= 0, "Negative indexing is not supported."
+
+        else:
+            assert k >= 0, "Negative indexing is not supported."
 
         if self._result_cache is not None:
             return self._result_cache[k]
 
-        #additional logic goes here
+        if isinstance(k, slice):
+            qs = self._chain()
+            start = int(k.start) if k.start is not None else None
+            stop = int(k.stop) if k.stop is not None else None
+            qs.query.set_limits(start, stop)
+            return list(qs)[::k.step] if k.step else qs
+
+        qs = self._chain()
+        qs.query.set_limits(k, k + 1)
+        qs._fetch_all()
+        return qs._result_cache[0]
 
     
     ####################################
@@ -131,12 +149,19 @@ class QuerySet():
         obj.query.add_ordering(*field_names)
         return obj
 
+    def reverse(self):
+        if self.query.is_sliced:
+            raise TypeError('Cannot reverse a query once a slice has been taken.')
+        clone = self._chain()
+        clone.query.standard_ordering = not clone.query.standard_ordering
+        return clone
+
     def defer(self, *fields):
         if self._fields is not None:
             raise TypeError("Cannot call defer() after .values() or .values_list()")
 
         clone = self._chain()
-        if fields = (None,):
+        if fields == (None,):
             self.query.clear_deferred_loading()
         else:
             self.query.add_deferred_loading(fields)
@@ -147,7 +172,7 @@ class QuerySet():
         if self._fields is not None:
             raise TypeError("Cannot call only() after .values() or .values_list()")
 
-        if fields = (None,):
+        if fields == (None,):
             raise TypeError("Cannot pass None as an argument to only().")
 
         clone = self._chain()

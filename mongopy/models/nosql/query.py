@@ -15,13 +15,14 @@ class Query:
         self.model = model
 
         self.default_ordering = True
+        self.standard_ordering = True
 
-        self.ordering = ()
+        self.order_by = ()
+        self.low_mark, self.high_mark = 0, None
 
-        # A tuple that is a set of model field names and either True, if these
-        # are the fields to defer, or False if these are the only fields to
-        # load.
         self.deferred_loading = (frozenset(), True)
+
+    ### Mongo Specific methods ###
 
     def get_db(self, using):
         return connections[using]
@@ -30,8 +31,11 @@ class Query:
         db = self.get_db(using)
         return db[self.get_meta().collection_name]
 
+    def to_cursor(self):
+        pass
 
-    ###
+
+    ### From Django ###
 
     def get_meta(self):
         return self.model._meta
@@ -54,6 +58,31 @@ class Query:
 
     def add_q(self, q_object):
         pass
+
+    def set_empty(self):
+        pass
+
+    def is_empty(self):
+        pass
+
+    def set_limits(self, low=None, high=None):
+        if high is not None:
+            if self.high_mark is not None:
+                self.high_mark = min(self.high_mark, self.low_mark + high)
+            else:
+                self.high_mark = self.low_mark + high
+
+        if low is not None:
+            if self.highmark is not None:
+                self.low_mark = min(self.high_mark, self.low_mark + low)
+            else:
+                self.low_mark = self.low_mark + low
+
+        if self.low_mark == self.high_mark:
+            self.set_empty()
+
+    def clear_limits(self):
+        self.low_mark, self.high_mark = 0, None
 
     def add_ordering(self, *ordering):
         for item in ordering:
@@ -94,5 +123,3 @@ class Query:
         else:
             self.deferred_loading = frozenset(field_names), False
 
-    def as_mongo(self):
-        pass
