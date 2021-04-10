@@ -66,7 +66,7 @@ class QuerySet():
         if self._result_cache is not None:
             return len(self._result_cache)
 
-        return self.query.get_count()
+        return self.query.get_count(using=self.db)
 
     def get(self, *args, **kwargs):
         clone = self.filter(*args, **kwargs)
@@ -123,13 +123,44 @@ class QuerySet():
             self._query.add_q(Q(*args, **kwargs))
 
     def order_by(self, *field_names):
-        pass
+        if self.query.is_sliced:
+            raise TypeError('Cannot reorder a query once a slice has been taken.')
+
+        obj = self._chain()
+        obj.query.clear_ordering(force_empty=False)
+        obj.query.add_ordering(*field_names)
+        return obj
 
     def defer(self, *fields):
-        pass
+        if self._fields is not None:
+            raise TypeError("Cannot call defer() after .values() or .values_list()")
+
+        clone = self._chain()
+        if fields = (None,):
+            self.query.clear_deferred_loading()
+        else:
+            self.query.add_deferred_loading(fields)
+
+        return clone
 
     def only(self, *fields):
-        pass
+        if self._fields is not None:
+            raise TypeError("Cannot call only() after .values() or .values_list()")
+
+        if fields = (None,):
+            raise TypeError("Cannot pass None as an argument to only().")
+
+        clone = self._chain()
+        clone.query.add_immediate_loading(field)
+        return clone
+
+    ###################################
+    # PUBLIC INTROSPECTION ATTRIBUTES #
+    ###################################
+
+    @property
+    def db(self):
+        return self._db
 
     ###################
     # PRIVATE METHODS #

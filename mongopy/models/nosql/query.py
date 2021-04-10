@@ -14,6 +14,15 @@ class Query:
     def __init__(self, model):
         self.model = model
 
+        self.default_ordering = True
+
+        self.ordering = ()
+
+        # A tuple that is a set of model field names and either True, if these
+        # are the fields to defer, or False if these are the only fields to
+        # load.
+        self.deferred_loading = (frozenset(), True)
+
     def get_db(self, using):
         return connections[using]
 
@@ -45,6 +54,45 @@ class Query:
 
     def add_q(self, q_object):
         pass
+
+    def add_ordering(self, *ordering):
+        for item in ordering:
+            if item.startswith('-'):
+                item = item[1:]
+            
+            self.get_meta().get_field(item)
+
+        if ordering:
+            self.order_by += ordering
+        else:
+            self.default_ordering = False
+
+    def clear_ordering(self, force_empty):
+        self.order_by = ()
+        if force_empty:
+            self.default_ordering = False
+
+    def clear_deferred_loading(self):
+        self.deferred_loading = (frozenset(), True)
+
+    def add_deferred_loading(self, field_names):
+        existing, defer = self.deferred_loading
+        if defer:
+            self.deferred_loading = existing.union(field_names), True
+        else:
+            self.deferred_loading = existing.difference(field_names), False
+
+    def add_immediate_loading(self, field_names):
+        existing, defer = self.deferred_loading
+        field_names = set(field_names)
+        if 'pk' in field_names:
+            field_names.remove('pk')
+            field_names.add(self.get_meta().pk.name)
+
+        if defer:
+            self.deferred_loading = field_names.difference(existing), False
+        else:
+            self.deferred_loading = frozenset(field_names), False
 
     def as_mongo(self):
         pass
