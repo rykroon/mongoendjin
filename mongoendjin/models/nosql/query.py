@@ -31,7 +31,8 @@ class Query:
         db = self.get_db(using)
         return db[self.get_meta().collection_name]
 
-    def to_cursor(self):
+    def get_cursor(self):
+        #plays the same role as 'get_compiler()'
         pass
 
 

@@ -9,11 +9,15 @@ class BaseIterable:
 
 
 class ModelIterable(BaseIterable):
-    pass
+    
+    def __iter__(self):
+        pass
 
 
 class ValuesIterable(BaseIterable):
-    pass
+    
+    def __iter__(self):
+        pass
 
 
 
