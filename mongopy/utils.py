@@ -7,3 +7,7 @@ class ConnectionHandler:
 
     def create_connection(self, alias):
         pass
+
+
+class ConnectionRouter:
+    pass
