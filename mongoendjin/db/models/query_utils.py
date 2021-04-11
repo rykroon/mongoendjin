@@ -1,4 +1,4 @@
-from mongoendjin.models.utils import tree
+from mongoendjin.utils import tree
 
 
 class Q(tree.Node):

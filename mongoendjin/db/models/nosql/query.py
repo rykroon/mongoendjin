@@ -1,5 +1,8 @@
 from mongoendjin import connections
+from mongoendjin.models.constants import LOOKUP_SEP
 from mongoendjin.models.nosql.datastructures import Empty
+from mongoendjin.models.nosql.filter import FilterNode, AND, OR
+from mongoendjin.models.query_utils import Q
 
 
 """
@@ -11,11 +14,14 @@ from mongoendjin.models.nosql.datastructures import Empty
 
 class Query:
 
-    def __init__(self, model):
+    def __init__(self, model, filter_class=FilterNode):
         self.model = model
 
         self.default_ordering = True
         self.standard_ordering = True
+
+        self.filter = filter_class()
+        self.filter_class = filter_class
 
         self.order_by = ()
         self.low_mark, self.high_mark = 0, None
@@ -57,8 +63,36 @@ class Query:
         obj = self.clone()
         return obj.get_collection(using).count_documents(self.filter)
 
+    def build_filter(self, filter_expr):
+        if isinstance(filter_expr, Q):
+            return self.add_q(filter_expr)
+
+        arg, value = filter_expr
+
+        field_name, lookup_name = arg.partition(LOOKUP_SEP)
+        if not lookup_name:
+            lookup_name = 'exact'
+
+        opts = self.get_meta()
+        field = opts.get_field(field_name)
+        lookup_class = field.get_lookup(lookup_name)
+        lookup = lookup_class(field, value)
+        clause = self.filter_class()
+        clause.add(lookup, AND)
+        return clause
+
     def add_q(self, q_object):
-        pass
+        target_clause = self.filter_class(
+            connector=q_object.connector,
+            negated=q_object.negated
+        )
+
+        for child in q_object.children:
+            child_clause = self.build_filter(child)
+            if child_clause:
+                target_clause.add(child_clause, q_object.connector)
+
+        self.filter.add(target_clause, AND)
 
     def set_empty(self):
         pass
