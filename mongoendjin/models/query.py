@@ -1,6 +1,6 @@
 
-from mongopy.models.constants import LOOKUP_SEP
-from mongopy.models.query_utils import Q
+from mongoendjin.models.constants import LOOKUP_SEP
+from mongoendjin.models.query_utils import Q
 
 
 class BaseIterable:

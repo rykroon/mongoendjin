@@ -5,7 +5,7 @@ ORM.
 
 import copy
 
-from mongopy.models.utils.hashable import make_hashable
+from mongoendjin.models.utils.hashable import make_hashable
 
 
 class Node:

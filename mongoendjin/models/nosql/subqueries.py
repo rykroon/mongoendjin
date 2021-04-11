@@ -1,4 +1,4 @@
-from mongopy.models.nosql.query import Query
+from mongoendjin.models.nosql.query import Query
 
 
 class DeleteQuery(Query):

@@ -1,11 +1,11 @@
-from mongopy import connections
-from mongopy.models.nosql.datastructures import Empty
+from mongoendjin import connections
+from mongoendjin.models.nosql.datastructures import Empty
 
 
 """
     This is where the codebase will deviate the most from Django.
     In Django the Query class is used to genereate an SQL query.
-    For Mongopy, this class will be used to generate a pymongo cursor.
+    For mongoendjin, this class will be used to generate a pymongo cursor.
 """
 
 

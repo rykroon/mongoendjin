@@ -1,4 +1,4 @@
-from mongopy.utils import ConnectionHandler, ConnectionRouter
+from mongoendjin.utils import ConnectionHandler, ConnectionRouter
 
 
 connections = ConnectionHandler()

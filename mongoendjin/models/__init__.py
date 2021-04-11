@@ -1,6 +1,6 @@
-from mongopy.models.base import Model
-from mongopy.models.fields import BinaryField, BooleanField, DateField, \
+from mongoendjin.models.base import Model
+from mongoendjin.models.fields import BinaryField, BooleanField, DateField, \
     DictField, FloatField, IntField, ListField, ObjectIdField, StringField
-from mongopy.models.lookups import Lookup
-from mongopy.models.query import QuerySet
-from mongopy.models.query_utils import Q
+from mongoendjin.models.lookups import Lookup
+from mongoendjin.models.query import QuerySet
+from mongoendjin.models.query_utils import Q
