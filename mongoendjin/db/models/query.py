@@ -1,6 +1,7 @@
 
-from mongoendjin.models.constants import LOOKUP_SEP
-from mongoendjin.models.query_utils import Q
+from mongoendjin.db.models import nosql
+from mongoendjin.db.models.constants import LOOKUP_SEP
+from mongoendjin.db.models.query_utils import Q
 
 
 class BaseIterable:
@@ -26,9 +27,10 @@ class QuerySet():
     def __init__(self, model=None, query=None, using=None):
         self.model = model
         self._db = using
-        self._query = query or mongo.Query(self.model)
+        self._query = query or nosql.Query(self.model)
         self._result_cache = None
         self._iterable_class = ModelIterable
+        self._fields = None
 
     @property
     def query(self):

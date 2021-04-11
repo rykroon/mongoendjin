@@ -1,4 +1,4 @@
-from mongoendjin.models.utils.itercompat import is_iterable
+from mongoendjin.utils.itercompat import is_iterable
 
 
 def make_hashable(value):

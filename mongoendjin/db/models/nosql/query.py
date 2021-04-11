@@ -1,8 +1,8 @@
-from mongoendjin import connections
-from mongoendjin.models.constants import LOOKUP_SEP
-from mongoendjin.models.nosql.datastructures import Empty
-from mongoendjin.models.nosql.filter import FilterNode, AND, OR
-from mongoendjin.models.query_utils import Q
+from mongoendjin.db import connections
+from mongoendjin.db.models.constants import LOOKUP_SEP
+from mongoendjin.db.models.nosql.datastructures import Empty
+from mongoendjin.db.models.nosql.filter import FilterNode, AND, OR
+from mongoendjin.db.models.query_utils import Q
 
 
 """
@@ -51,6 +51,7 @@ class Query:
         obj = Empty()
         obj.__class__ = self.__class__
         obj.__dict__ = self.__dict__.copy()
+        obj.filter = self.filter.clone()
         return obj
 
     def chain(self, klass=None):
@@ -69,7 +70,9 @@ class Query:
 
         arg, value = filter_expr
 
-        field_name, lookup_name = arg.partition(LOOKUP_SEP)
+        #this is a very simplified version that what is in Django
+
+        field_name, _, lookup_name = arg.partition(LOOKUP_SEP)
         if not lookup_name:
             lookup_name = 'exact'
 

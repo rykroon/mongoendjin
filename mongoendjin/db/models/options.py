@@ -1,7 +1,7 @@
 import copy
 from .errors import FieldDoesNotExist
-from mongoendjin.models.utils.functional import cached_property
-from mongoendjin.models.utils.text import camel_case_to_spaces
+from mongoendjin.utils.functional import cached_property
+from mongoendjin.utils.text import camel_case_to_spaces
 
 
 DEFAULT_NAMES = (
