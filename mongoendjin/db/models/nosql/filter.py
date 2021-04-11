@@ -16,6 +16,16 @@ class FilterNode(tree.Node):
     """
     default = AND
 
+    def clone(self):
+        clone = self.__class__._new_instance(
+            children=[], connector=self.connector, negated=self.negated)
+        for child in self.children:
+            if hasattr(child, 'clone'):
+                clone.children.append(child.clone())
+            else:
+                clone.children.append(child)
+        return clone
+
     def as_mongo(self):
         result = {}
         for child in self.children:
