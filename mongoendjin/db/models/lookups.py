@@ -1,4 +1,6 @@
-from .fields import Field
+from datetime import datetime
+from bson import ObjectId
+from mongoendjin.db.models.fields import Field
 
 
 class Lookup:
@@ -117,15 +119,55 @@ class Range(Lookup):
             '$lt': self.rhs[1]
         }
 
-
 @Field.register_lookup
-class IsNull(Lookup):
-    lookup_name = 'isnull'
+class Type(Lookup):
+    lookup_name = 'type'
     mongo_op = '$type'
 
     def process_rhs(self):
+        value = self.rhs
+
+        if value is None:
+            value = 'null'
+
+        if isinstance(value, type):
+            value = {
+                bool: 'bool',
+                bytes: 'binData',
+                datetime: 'date',
+                dict: 'object',
+                float: 'double',
+                int: 'int',
+                list: 'array',
+                ObjectId: 'objectId',
+                str: 'string',
+                type(None): 'null'
+            }[value]
+
+        return {self.mongo_op: value}
+
+
+class IsType(Type):
+    type_name = None
+
+    def process_rhs(self):
         if self.rhs:
-            return {self.mongo_op: 'null'}
+            return {self.mongo_op: self.type_name}
         else:
-            return {'$not': {self.mongo_op: 'null'}}
+            return {'$not': {self.mongo_op: self.type_name}}
+
+
+@Field.register_lookup
+class IsNull(IsType):
+    lookup_name = 'isnull'
+    type_name = 'null'
+
+
+@Field.register_lookup
+class Exists(Lookup):
+    lookup_name = 'exists'
+    mongo_op = '$exists'
+
+    def process_rhs(self):
+        return {self.mongo_op: bool(self.rhs)}
 
