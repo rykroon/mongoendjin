@@ -8,6 +8,11 @@ from mongoendjin.utils import tree
 AND = 'AND'
 OR = 'OR'
 
+CONNECTION_TYPE_TO_MONGO = {
+    AND: '$and',
+    OR: '$or'
+}
+
 
 class FilterNode(tree.Node):
 
@@ -27,7 +32,12 @@ class FilterNode(tree.Node):
         return clone
 
     def as_mongo(self):
-        result = {}
+        connector = CONNECTION_TYPE_TO_MONGO[self.connector]
+        result = []
+
         for child in self.children:
-            result.update(child.as_mongo())
-        return result
+            result.append(child.as_mongo())
+
+        return {
+            connector: result
+        }
