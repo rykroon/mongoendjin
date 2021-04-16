@@ -37,9 +37,12 @@ class Query:
         db = self.get_db(using)
         return db[self.get_meta().collection_name]
 
-    def get_cursor(self):
+    def get_cursor(self, using):
         #plays the same role as 'get_compiler()'
-        pass
+        coll = self.get_collection(using)
+        cursor = coll.find(self.filter.as_mongo())
+        #other stuff, order by, limit
+        return cursor
 
 
     ### From Django ###
