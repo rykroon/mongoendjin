@@ -57,6 +57,13 @@ class ModelBase(type):
             setattr(cls, name, value)
 
 
+class ModelState:
+    """Store model instance state."""
+    db = None
+    adding = True
+    #fields_cache = ModelStateFieldsCacheDescriptor()
+
+
 class Model(metaclass=ModelBase):
 
     _id = ObjectIdField()
@@ -66,6 +73,9 @@ class Model(metaclass=ModelBase):
         opts = cls._meta
         if opts.abstract:
             raise TypeError('Abstract models cannot be instantiated.')
+
+        # Set up the storage for instance state
+        self._state = ModelState()
 
         for field in opts.fields:
             try:
@@ -81,9 +91,11 @@ class Model(metaclass=ModelBase):
         super().__init__()
 
     @classmethod
-    def from_db(cls, db, field_names, values):
+    def from_db(cls, db, **kwargs):
         #more logic goes here
-        new = cls(*values)
+        new = cls(**kwargs)
+        new._state.adding = False
+        new._state.d b= db
         return new
 
     def __repr__(self):
