@@ -12,14 +12,20 @@ class BaseIterable:
 class ModelIterable(BaseIterable):
     
     def __iter__(self):
-        pass
+        queryset = self.queryset
+        db = queryset.db
+        cursor = self.queryset.query.get_cursor()
+        for doc in cursor:
+            obj = queryset.model.from_db(db, **doc)
+            yield obj
 
 
 class ValuesIterable(BaseIterable):
     
     def __iter__(self):
-        pass
-
+        cursor = self.queryset.query.get_cursor()
+        for doc in cursor:
+            yield doc
 
 
 class QuerySet():
