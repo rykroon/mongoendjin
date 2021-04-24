@@ -46,7 +46,7 @@ class Field(RegisterLookupMixin):
             setattr(cls, self.name, self)
 
     def get_default(self):
-        if self.default is not Undefined:
+        if self.default is not NOT_PROVIDED:
             if callable(self.default):
                 return self.default()
             return self.default
