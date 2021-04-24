@@ -14,7 +14,7 @@ class ModelIterable(BaseIterable):
     def __iter__(self):
         queryset = self.queryset
         db = queryset.db
-        cursor = self.queryset.query.get_cursor()
+        cursor = self.queryset.query.get_cursor(using=db)
         for doc in cursor:
             obj = queryset.model.from_db(db, **doc)
             yield obj
@@ -23,7 +23,9 @@ class ModelIterable(BaseIterable):
 class ValuesIterable(BaseIterable):
     
     def __iter__(self):
-        cursor = self.queryset.query.get_cursor()
+        queryset = self.queryset
+        db = queryset.db
+        cursor = self.queryset.query.get_cursor(using=db)
         for doc in cursor:
             yield doc
 
