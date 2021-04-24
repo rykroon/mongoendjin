@@ -1,11 +1,12 @@
 from mongoendjin.db.utils import ConnectionHandler, ConnectionRouter
 
 
-connections = ConnectionHandler()
+connections = None
 
 router = ConnectionRouter()
 
 
-def connect():
+def connect(settings):
     #create helper method for connecting
-    pass
+    global connections
+    connections = ConnectionHandler(settings)
