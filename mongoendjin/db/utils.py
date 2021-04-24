@@ -7,6 +7,12 @@ DEFAULT_DB_ALIAS = 'default'
 
 class ConnectionHandler(BaseConnectionHandler):
 
+    def configure_settings(self, databases):
+        databases = super().configure_settings(databases)
+        if DEFAULT_DB_ALIAS not in databases:
+            raise Exception("Improperly Configured.")
+        return databases
+
     @property
     def databases(self):
         return self.settings
