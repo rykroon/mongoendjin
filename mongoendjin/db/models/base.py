@@ -1,9 +1,10 @@
 import copy
 import inspect
 
-from .errors import ValidationError
-from .fields import ObjectIdField
-from .options import Options
+from mongoendjin.db.models.errors import ValidationError
+from mongoendjin.db.models.fields import ObjectIdField
+from mongoendjin.db.models.manager import Manager
+from mongoendjin.db.models.options import Options
 
 
 def _has_contribute_to_class(value):
@@ -48,6 +49,7 @@ class ModelBase(type):
                 new_field = copy.deepcopy(field)
                 new_class.add_to_class(field.name, new_field)
 
+        new_class._prepare()
         return new_class
 
     def add_to_class(cls, name, value):
@@ -55,6 +57,20 @@ class ModelBase(type):
             value.contribute_to_class(cls, name)
         else:
             setattr(cls, name, value)
+
+    def _prepare(cls):
+        opts = cls._meta
+        opts._prepare(cls)
+
+        if not opts.managers:
+            if any(f.name == 'objects' for f in opts.fields):
+                raise ValueError(
+                    "Model %s must specify a custom Manager, because it has a "
+                    "field named 'objects'." % cls.__name__
+                )
+            manager = Manager()
+            manager.auto_created = True
+            cls.add_to_class('objects', manager)
 
 
 class ModelState:
@@ -95,7 +111,7 @@ class Model(metaclass=ModelBase):
         #more logic goes here
         new = cls(**kwargs)
         new._state.adding = False
-        new._state.d b= db
+        new._state.db= db
         return new
 
     def __repr__(self):
