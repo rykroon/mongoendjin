@@ -102,7 +102,6 @@ class Options:
 
     @cached_property
     def managers(self):
-        print('managers')
         managers = []
         seen_managers = set()
         bases = (b for b in self.model.mro() if hasattr(b, '_meta'))
