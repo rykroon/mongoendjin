@@ -16,6 +16,10 @@ class BaseManager:
         cls._meta.add_manager(self)
 
 
+class Manager(BaseManager):
+    pass
+
+
 class ManagerDescriptor:
     def __init__(self, manager):
         self.manager = manager
@@ -24,4 +28,4 @@ class ManagerDescriptor:
         if instance is not None:
             raise AttributeError("Manager isn't accessible via %s instances" % owner.__name__)
 
-        return cls._meta.managers_map[self.manager.name]
+        return owner._meta.managers_map[self.manager.name]
