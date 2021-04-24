@@ -58,11 +58,17 @@ class Options:
         if not self.collection_name:
             self.collection_name = self.model_name
 
-    def add_field(self, field):
-        self.local_fields.append(field)
+    def _prepare(self, model):
+        pass
 
     def add_manager(self, manager):
         self.local_managers.append(manager)
+        #expire cache
+        if 'managers' in self.__dict__:
+            delattr(self, 'managers')
+
+    def add_field(self, field):
+        self.local_fields.append(field)
 
     def get_field(self, field_name):
         try:
@@ -96,6 +102,7 @@ class Options:
 
     @cached_property
     def managers(self):
+        print('managers')
         managers = []
         seen_managers = set()
         bases = (b for b in self.model.mro() if hasattr(b, '_meta'))
