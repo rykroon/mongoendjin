@@ -38,6 +38,9 @@ class FilterNode(tree.Node):
         for child in self.children:
             result.append(child.as_mongo())
 
-        return {
-            connector: result
-        }
+        if result:
+            return {
+                connector: result
+            }
+        
+        return {}
