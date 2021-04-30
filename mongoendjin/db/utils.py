@@ -34,15 +34,23 @@ class ConnectionHandler(BaseConnectionHandler):
         self.ensure_defaults(alias)
         db = self.databases[alias]
 
-        #will need to add logic for different configuration scenarios
-        uri_format = 'mongodb://{user}:{password}@{host}:{port}'
-        uri = uri_format.format(
-            db['USER'], db['PASSWORD'], 
-            db['HOST'], db['PORT']
-        )
-        conn = MongoClient(host=uri)
-        db = conn[db['NAME']]
-        return db
+        if not db['USER'] and not db['PASSWORD']:
+            conn = MongoClient(
+                host=db['HOST'] or None,
+                port=db['PORT'] or None
+            )
+            db = conn[db['NAME']]
+            return db
+
+        else:
+            uri_format = 'mongodb://{user}:{password}@{host}:{port}'
+            uri = uri_format.format(
+                db['USER'], db['PASSWORD'], 
+                db['HOST'], db['PORT']
+            )
+            conn = MongoClient(host=uri)
+            db = conn[db['NAME']]
+            return db
 
 
 class ConnectionRouter:
