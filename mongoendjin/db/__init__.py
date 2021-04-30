@@ -10,3 +10,6 @@ def connect(settings):
     #create helper method for connecting
     global connections
     connections = ConnectionHandler(settings)
+
+def get_connection(alias):
+    return connections[alias]

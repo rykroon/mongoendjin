@@ -1,4 +1,4 @@
-from mongoendjin.db import connections
+from mongoendjin.db import get_connection
 from mongoendjin.db.models.constants import LOOKUP_SEP
 from mongoendjin.db.models.nosql.datastructures import Empty
 from mongoendjin.db.models.nosql.filter import FilterNode, AND, OR
@@ -31,7 +31,7 @@ class Query:
     ### Mongo Specific methods ###
 
     def get_db(self, using):
-        return connections[using]
+        return get_connection(using)
 
     def get_collection(self, using):
         db = self.get_db(using)
