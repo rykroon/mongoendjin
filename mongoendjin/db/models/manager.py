@@ -1,5 +1,6 @@
 import inspect
 from mongoendjin.db.models.query import QuerySet
+from mongoendjin.db.utils import DEFAULT_DB_ALIAS
 
 class BaseManager:
 
@@ -50,6 +51,10 @@ class BaseManager:
         setattr(cls, name, ManagerDescriptor(self))
 
         cls._meta.add_manager(self)
+
+    @property
+    def db(self):
+        return self._db or DEFAULT_DB_ALIAS #router.db_for_read(self.model, **self._hints)
 
     def get_queryset(self):
         return self._queryset_class(model=self.model, using=self._db)

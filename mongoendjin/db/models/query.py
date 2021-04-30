@@ -2,6 +2,7 @@
 from mongoendjin.db.models import nosql
 from mongoendjin.db.models.constants import LOOKUP_SEP
 from mongoendjin.db.models.query_utils import Q
+from mongoendjin.db.utils import DEFAULT_DB_ALIAS
 
 
 class BaseIterable:
@@ -199,7 +200,7 @@ class QuerySet():
 
     @property
     def db(self):
-        return self._db
+        return self._db or DEFAULT_DB_ALIAS
 
     ###################
     # PRIVATE METHODS #
